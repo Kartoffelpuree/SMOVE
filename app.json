@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "SMOVE",
+    "slug": "SMOVE",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "expo-permissions": {
+      "network": {
+        "localhost": [
+          "http://192.168.1.10:3000"
+        ]
+      }
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Necesitamos acceso a tu cámara para escanear etiquetas.",
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para guardar fotos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff",
+        "permissions": [
+          "CAMERA",
+          "READ_EXTERNAL_STORAGE",
+          "WRITE_EXTERNAL_STORAGE"
+        ]
+      },
+      "config": {
+        "googleMobileAdsAppId": "your-admob-app-id"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2cc950ce-5803-4546-af07-c82749ec9366"
+      }
+    }
+  }
+}
