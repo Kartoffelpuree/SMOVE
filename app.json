@@ -11,13 +11,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "expo-permissions": {
-      "network": {
-        "localhost": [
-          "http://192.168.1.10:3000"
-        ]
-      }
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -26,28 +19,31 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Necesitamos acceso a tu cámara para escanear etiquetas.",
         "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu galería para guardar fotos."
-      }
+      },
+      "bundleIdentifier": "com.ikartoffel.SMOVE"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "permissions": [
-          "CAMERA",
-          "READ_EXTERNAL_STORAGE",
-          "WRITE_EXTERNAL_STORAGE"
-        ]
+        "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "config": {
         "googleMobileAdsAppId": "your-admob-app-id"
-      }
+      },
+      "package": "com.ikartoffel.SMOVE"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "owner": "ikartoffel",
     "extra": {
       "eas": {
-        "projectId": "2cc950ce-5803-4546-af07-c82749ec9366"
+        "projectId": "f6f1c821-0846-4aaa-9baa-5c0c9e030cd5"
       }
     }
   }
