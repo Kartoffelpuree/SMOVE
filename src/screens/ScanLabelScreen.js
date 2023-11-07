@@ -7,6 +7,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import * as Notifications from 'expo-notifications';
 import NotificationModal from '../components/NotificationModal'; // Ajusta la ruta según la ubicación de tu componente modal
+import ErrorNotificationModal from '../components/ErrorNotificationModal';
+
 
 const API_URL = 'http://192.168.1.10:3000';
 
@@ -30,6 +32,8 @@ const ScanLabelScreen = ({ route, navigation }) => {
   const [currentScanIndex, setCurrentScanIndex] = useState(0);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+
 
   useEffect(() => {
     if (route.params && route.params.bolNumber) {
@@ -93,8 +97,7 @@ const ScanLabelScreen = ({ route, navigation }) => {
     }
   }, [currentScanIndex]);
 
-  const showNotification = (message) => {
-    setNotificationMessage(message);
+  const showNotification = () => {
     setNotificationVisible(true);
 
     // Ocultar la notificación después de 2 segundos
@@ -106,7 +109,14 @@ const ScanLabelScreen = ({ route, navigation }) => {
     }, 3000);
   };
 
-  const handleBarCodeScanned = ({ type, data }) => {
+  const showErrorNotification = () => {
+    setErrorModalVisible(true);
+    setTimeout(() => {
+      setNotificationVisible(false);
+    }, 2000);
+  };
+
+  const handleBarCodeScanned = async ({ type, data }) => {
     if (!isScanHandled) {
       if (type === BarCodeScanner.Constants.BarCodeType.code39 && !scannedBarCode && !barcodePrinted) {
         console.log(`Tipo de código: ${type}, Datos: ${data}`);
@@ -121,7 +131,23 @@ const ScanLabelScreen = ({ route, navigation }) => {
           console.log('Código de barras sin P:', modifiedCode);
           return modifiedCode;
         });
+        // Obtener el Part_Number correspondiente al BoL desde la base de datos
+        const partNumberFromDatabase = await obtenerPartNumber(selectedBoL, data);
 
+        if (partNumberFromDatabase !== null) {
+          // Verificar si el Part_Number coincide con el código de barras escaneado
+          if (partNumberFromDatabase !== modifiedCode) {
+            console.log('Error de validación. El Part_Number no coincide con el código de barras escaneado.');
+            showErrorNotification();
+            restartScan();
+            return;
+          }
+        } else {
+          console.error('Error al obtener el Part_Number desde la base de datos.');
+          showErrorNotification();
+          restartScan();
+          return;
+        }
         setBarcodePrinted(true);
         setIsScanning(false);
       } else if (type === BarCodeScanner.Constants.BarCodeType.qr && !scannedQRCode && !qrCodePrinted) {
@@ -135,10 +161,48 @@ const ScanLabelScreen = ({ route, navigation }) => {
           console.log('Codigo QR 2do Valor:', secondField);
           return secondField;
         });
+        // Obtener el Part_Number correspondiente al BoL desde la base de datos
+        const partNumberFromDatabase = await obtenerPartNumber(selectedBoL, data);
 
+        if (partNumberFromDatabase !== null) {
+          // Verificar si el Part_Number coincide con el código QR escaneado
+          if (partNumberFromDatabase !== secondField) {
+            console.log('Error de validación. El Part_Number no coincide con el código QR escaneado.');
+            showErrorNotification();
+            restartScan();
+            return;
+          }
+        } else {
+          console.error('Error al obtener el Part_Number desde la base de datos.');
+          showErrorNotification();
+          restartScan();
+          return;
+        }
         setQrCodePrinted(true);
         setIsScanning(false);
       }
+    }
+  };
+
+  const obtenerPartNumber = async (bolNumber) => {
+    try {
+      const response = await axios.get(`${API_URL}/obtenerPartNumber/${bolNumber}`);
+      console.log('Respuesta del servidor al obtenerPartNumber:', response.data);
+  
+      if (response.data.partNumber) {
+        return response.data.partNumber;
+      } else {
+        console.error('Part_Number no encontrado en la respuesta del servidor.');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error al obtener el Part_Number desde la base de datos:', error);
+  
+      if (error.response) {
+        console.error('Respuesta del servidor:', error.response.data);
+      }
+  
+      return null;
     }
   };
 
@@ -244,22 +308,6 @@ const ScanLabelScreen = ({ route, navigation }) => {
     });
   };
 
-  //Similar a la notificación de exito esta muestra el error
-  const showErrorNotification = async () => {
-    try {
-      const content = {
-        title: 'Error de Validación',
-        body: 'Los códigos no coinciden. Escaneo fallido.',
-      };
-      await Notifications.scheduleNotificationAsync({
-        content,
-        trigger: null, // O proporciona un objeto de desencadenador si deseas programar la notificación
-      });
-
-    } catch (error) {
-      console.error('Error al mostrar la notificación de error:', error);
-    }
-  };
 
   const fadeAnim = new Animated.Value(0);
   useEffect(() => {
@@ -333,11 +381,18 @@ const ScanLabelScreen = ({ route, navigation }) => {
           <Icon name="qrcode-scan" size={32} color="#ffffff" style={styles.scanButtonIcon} />
         </TouchableOpacity>
       </View>
+      {/* Modal de error */}
+      <ErrorNotificationModal
+        visible={errorModalVisible}
+        onClose={() => setErrorModalVisible(false)}
+        bolNumber={selectedBoL}  // Puedes ajustar esto según tu implementación
+      />
       {/* Componente modal */}
       <NotificationModal
         visible={notificationVisible}
         closeModal={() => setNotificationVisible(false)}
         message={notificationMessage}
+        bolNumber={selectedBoL}
       />
       {/* Resultados del escaneo */}
       {(scannedBarCode || scannedQRCode) && (
