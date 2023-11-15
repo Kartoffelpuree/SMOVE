@@ -4,18 +4,15 @@
     "slug": "SMOVE",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/ascicon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
     },
-    "plugins":[
+    "plugins": [
       [
         "expo-build-properties",
         {
-          "android":{
+          "android": {
             "usesCleartextTraffic": true
           }
         }
@@ -34,12 +31,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/ascicon.png",
         "backgroundColor": "#ffffff"
-      },
-
-      "config": {
-        "googleMobileAdsAppId": "your-admob-app-id"
       },
       "package": "com.ikartoffel.SMOVE",
       "permissions": [
@@ -57,6 +50,12 @@
       "eas": {
         "projectId": "f6f1c821-0846-4aaa-9baa-5c0c9e030cd5"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f6f1c821-0846-4aaa-9baa-5c0c9e030cd5"
     }
   }
 }

@@ -105,7 +105,9 @@ const ScanLabelScreen = ({ route, navigation }) => {
       setNotificationVisible(false);
       // Restaurar el mensaje por defecto si es necesario
       setNotificationMessage('');
-      navigation.navigate('BoLScreen')
+      navigation.navigate('BoLScreen', {
+        isUpdated: true,
+      });
     }, 3000);
   };
 
@@ -119,8 +121,15 @@ const ScanLabelScreen = ({ route, navigation }) => {
   const handleBarCodeScanned = async ({ type, data }) => {
     if (!isScanHandled) {
       if (type === BarCodeScanner.Constants.BarCodeType.code39 && !scannedBarCode && !barcodePrinted) {
-        console.log(`Tipo de código: ${type}, Datos: ${data}`);
+        console.log(`Tipo de código: ${type}, Datos: ${data}`)
 
+        // Verifica si el código tiene la letra 'P' al inicio
+        if (!data.startsWith('P')) {
+          console.log('Error: El código de barras no tiene la letra "P" al inicio. Reiniciando el escaneo...');
+          //showErrorNotification();
+          restartScan();
+          return;
+        }
         // Almacena el código de barras completo
         setScannedBarCode(data);
 
@@ -188,7 +197,7 @@ const ScanLabelScreen = ({ route, navigation }) => {
     try {
       const response = await axios.get(`${API_URL}/obtenerPartNumber/${bolNumber}`);
       console.log('Respuesta del servidor al obtenerPartNumber:', response.data);
-  
+
       if (response.data.partNumber) {
         return response.data.partNumber;
       } else {
@@ -197,11 +206,11 @@ const ScanLabelScreen = ({ route, navigation }) => {
       }
     } catch (error) {
       console.error('Error al obtener el Part_Number desde la base de datos:', error);
-  
+
       if (error.response) {
         console.error('Respuesta del servidor:', error.response.data);
       }
-  
+
       return null;
     }
   };

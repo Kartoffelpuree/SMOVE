@@ -20,6 +20,15 @@ const BoLScreen = () => {
   const [scansRemaining, setScansRemaining] = useState(0);
   const navigation = useNavigation();
 
+  useEffect(() => {
+    navigation.addListener('focus', () => {
+      // Refrescar los componentes de la fecha y BoL
+      fetchData(date.toISOString().split('T')[0]);
+      // Resetear la fecha del datapicker
+      setDate(new Date());
+    });
+  }, [navigation]);
+
   const handleNavigateToScanLabelScreen = () => {
     // Navegar a la pantalla ScanLabelScreen
     navigation.navigate('ScanLabel');
