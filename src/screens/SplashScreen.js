@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Video } from 'expo-av';
 import styled from 'styled-components/native';
+import * as SplashScreen from 'expo-splash-screen';
+
 
 const Container = styled.View`
   flex: 1;
@@ -18,6 +20,10 @@ const LoadingText = styled.Text`
 const SplashScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    // Oculta la pantalla de inicio después de que tu componente se haya montado
+    SplashScreen.hideAsync();
+  }, []);
   useEffect(() => {
     const simulateLoading = async () => {
       // Simula una carga durante 3 segundos
