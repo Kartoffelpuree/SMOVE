@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Video } from 'expo-av';
+import { View, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import styled from 'styled-components/native';
-import * as SplashScreen from 'expo-splash-screen';
-
 
 const Container = styled.View`
   flex: 1;
@@ -17,44 +14,30 @@ const LoadingText = styled.Text`
   font-size: 18px;
 `;
 
-const SplashScreen = ({ navigation }) => {
-  const [isLoading, setIsLoading] = useState(true);
+const CustomSplashScreen = ({ navigation }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const simulateLoading = async () => {
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    setIsLoaded(true);
+    navigation.replace('BoLScreen');
+  };
 
   useEffect(() => {
-    // Oculta la pantalla de inicio después de que tu componente se haya montado
-    SplashScreen.hideAsync();
-  }, []);
-  useEffect(() => {
-    const simulateLoading = async () => {
-      // Simula una carga durante 3 segundos
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      setIsLoading(false);
-
-      // Navegar a la pantalla principal después de cargar
-      navigation.replace('BoLScreen');
-    };
-
     simulateLoading();
   }, [navigation]);
 
   return (
     <Container>
-      <Video
-        source={require('../videos/ascload.mp4')}
-        style={{ flex: 1, alignSelf: 'stretch', width: undefined, height: undefined }}
-        resizeMode="contain"
-        shouldPlay
-        isLooping={false}
-        onPlaybackStatusUpdate={(status) => {
-          // No necesitas cambiar de pantalla aquí, lo haremos después de la simulación de carga
-          if (!status.isPlaying) {
-            simulateLoading(); // Puedes llamar a simulateLoading directamente al final del video
-          }
-        }}
+      <Image
+        style={{ flex: 1, alignSelf: 'stretch', width: undefined, height: undefined, resizeMode: 'contain' }}
+        source={require('../images/ascload.gif')}
       />
+      {!isLoaded && (
+        <ActivityIndicator size="large" color="white" />
+      )}
     </Container>
   );
 };
 
-export default SplashScreen;
+export default CustomSplashScreen;

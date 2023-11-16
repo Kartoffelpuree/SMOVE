@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import RNPickerSelect from 'react-native-picker-select';
+//import DropDownPicker from 'react-native-dropdown-picker';
 
 const API_URL = 'http://192.168.1.10:3000';
 
 const BoLScreen = () => {
   const [selectedBoL, setSelectedBoL] = useState(null);
+  const [isModalVisible, setModalVisible] = useState(false);
   const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [availableBoLs, setAvailableBoLs] = useState([]);
@@ -39,26 +41,26 @@ const BoLScreen = () => {
     if (selectedBoL) {
       console.log(`Contador enviado a ScanLabelScreen: ${scansForSelectedBoL}`);
       // Navegar a ScanLabelScreen y pasar el número de BoL#1 como parámetro
-      navigation.navigate('ScanLabel', { bolNumber: selectedBoL, scansNeeded: scansForSelectedBoL});
+      navigation.navigate('ScanLabel', { bolNumber: selectedBoL, scansNeeded: scansForSelectedBoL });
     } else {
       // Mostrar un mensaje o realizar alguna acción si no se ha seleccionado BoL#1
       console.warn('Por favor, selecciona un BoL#1 antes de escanear.');
     }
   };
-  
+
   const fetchData = async (fechaSeleccionada) => {
     try {
       // Obtener BoL#1 y sus respectivos recuentos
       const response = await axios.get(`${API_URL}/consulta/${fechaSeleccionada}`);
       const boL1Counts = {};
-  
+
       if (response && response.data) {
         response.data.forEach((item) => {
           const boL1 = item['BoL#1'];
           const escanerEstatus = item['Escaner_Estatus']; // Agregado para obtener el estado del escáner
           boL1Counts[boL1] = { count: (boL1Counts[boL1]?.count || 0) + 1, Escaner_Estatus: escanerEstatus };
         });
-  
+
         // Actualizar el estado de availableBoLs con la información de recuentos y estado del escáner
         const uniqueBoLs = Object.keys(boL1Counts);
         const boLsWithCounts = uniqueBoLs.map((boL) => ({
@@ -67,7 +69,7 @@ const BoLScreen = () => {
           Escaner_Estatus: boL1Counts[boL].Escaner_Estatus,
         }));
         setAvailableBoLs(boLsWithCounts);
-  
+
         // Calcular el total de escaneos
         const total = Object.values(boL1Counts).reduce((acc, count) => acc + count.count, 0);
         setTotalScans(total);
@@ -88,8 +90,13 @@ const BoLScreen = () => {
   const filteredBoLs = availableBoLs.filter((boL) => boL.Escaner_Estatus !== 'Realizado');
   console.log('filteredBoLs:', filteredBoLs); // Agregado para depuración
 
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
+
   const handleBoLChange = (itemValue, itemIndex) => {
     setSelectedBoL(itemValue);
+    toggleModal();
 
     // Consultar la cantidad de escaneos para el BoL seleccionado
     fetchScansForSelectedBoL(itemValue);
@@ -119,14 +126,33 @@ const BoLScreen = () => {
       <View style={styles.row}>
         <View style={styles.cell}>
           <Text style={styles.label}>BoL:</Text>
-          <Picker
-            selectedValue={selectedBoL}
-            style={styles.picker}
-            onValueChange={handleBoLChange}>
-            {filteredBoLs.map((boL, index) => (
-              <Picker.Item key={index} label={boL.boL} value={boL.boL} />
-            ))}
-          </Picker>
+          {/* <DropDownPicker
+            items={filteredBoLs.map((boL, index) => ({
+              label: boL.boL,
+              value: boL.boL,
+              key: index,
+            }))}
+            placeholder="Seleccione BoL"
+            containerStyle={{ height: 40 }}
+            onChangeItem={item => handleBoLChange(item.value)}
+            value={selectedBoL}
+            zIndex={5000}
+            maxHeight={150}
+          /> */}
+          <RNPickerSelect
+            placeholder={{ label: 'Seleccione BoL', value: null }}
+            onValueChange={handleBoLChange}
+            items={filteredBoLs.map((boL, index) => ({
+              label: boL.boL,
+              value: boL.boL,
+              key: index,
+            }))}
+            style={pickerSelectStyles}
+            value={selectedBoL}
+            listHeight={150}
+            
+          />
+
         </View>
         <View style={styles.cell}>
           <Text style={styles.label}>Fecha:</Text>
@@ -161,6 +187,35 @@ const BoLScreen = () => {
   );
 };
 
+const pickerSelectStyles = {
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: 'purple',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30,
+  },
+  placeholder: {
+    color: 'gray',
+  },
+  listContainer: {
+    flex: 1,
+  }
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -193,17 +248,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: 10,
   },
-  picker: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    maxWidth: '100%',
-    itemStyle: {
-      fontSize: 12,
-      flexWrap: 'wrap',
-    },
-  },
+
   button: {
     marginTop: 5,
     padding: 10,
