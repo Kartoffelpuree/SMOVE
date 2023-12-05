@@ -34,7 +34,6 @@ const ScanLabelScreen = ({ route, navigation }) => {
   const [notificationMessage, setNotificationMessage] = useState('');
   const [errorModalVisible, setErrorModalVisible] = useState(false);
 
-
   useEffect(() => {
     if (route.params && route.params.bolNumber) {
 
