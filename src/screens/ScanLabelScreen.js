@@ -33,6 +33,10 @@ const ScanLabelScreen = ({ route, navigation }) => {
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [lotNumberFromBarcode, setLotNumberFromBarcode] = useState(null); //Agregado
+  const [lotNumberFromQR, setLotNumberFromQR] = useState(null); //Agregado
+  const [extractLotNumber, setExtractLotNumber] = useState(null); //Agregado
+  const [lotNumberPrinted, setLotNumberPrinted] = useState(false); //Agregado
 
   useEffect(() => {
     if (route.params && route.params.bolNumber) {
@@ -117,11 +121,13 @@ const ScanLabelScreen = ({ route, navigation }) => {
     }, 2000);
   };
 
+
+
   const handleBarCodeScanned = async ({ type, data }) => {
     if (!isScanHandled) {
       if (type === BarCodeScanner.Constants.BarCodeType.code39 && !scannedBarCode && !barcodePrinted) {
-        console.log(`Tipo de código: ${type}, Datos: ${data}`)
-
+        console.log(`Tipo de código: ${type}, Datos: ${data}`);
+  
         // Verifica si el código tiene la letra 'P' al inicio
         if (!data.startsWith('P')) {
           console.log('Error: El código de barras no tiene la letra "P" al inicio. Reiniciando el escaneo...');
@@ -129,9 +135,10 @@ const ScanLabelScreen = ({ route, navigation }) => {
           restartScan();
           return;
         }
+  
         // Almacena el código de barras completo
         setScannedBarCode(data);
-
+  
         // Elimina la primera letra 'P' y almacena el código modificado
         const modifiedCode = data.substring(1);
         // Almacenar el código modificado en el estado
@@ -141,7 +148,7 @@ const ScanLabelScreen = ({ route, navigation }) => {
         });
         // Obtener el Part_Number correspondiente al BoL desde la base de datos
         const partNumberFromDatabase = await obtenerPartNumber(selectedBoL, data);
-
+  
         if (partNumberFromDatabase !== null) {
           // Verificar si el Part_Number coincide con el código de barras escaneado
           if (partNumberFromDatabase !== modifiedCode) {
@@ -157,10 +164,34 @@ const ScanLabelScreen = ({ route, navigation }) => {
           return;
         }
         setBarcodePrinted(true);
-        setIsScanning(false);
+        setIsScanning(true);
+      } else if (type === BarCodeScanner.Constants.BarCodeType.code39 && barcodePrinted && !lotNumberPrinted) {
+        console.log(`Tipo de código de barras (LoT_Number): ${type}, Datos: ${data}`);
+  
+        // Verifica si el código tiene la letra 'S' al inicio
+        if (!data.startsWith('S')) {
+          console.log('Error: El código de barras no tiene la letra "S" al inicio. Reiniciando el escaneo...');
+          // showErrorNotification();
+          restartLotScan();
+          return;
+        }
+  
+        // Almacena el código de barras completo
+        setScannedBarCode(data);
+  
+        // Extraer el LoT_Number del código de barras
+        const lotNumberFromBarcode = data.substring(1, 7);
+        setLotNumberFromBarcode((prevModifiedLotCode) => {
+          console.log('LN BR:', lotNumberFromBarcode);
+          return lotNumberFromBarcode;
+        });
+  
+        setLotNumberPrinted(true);
+        setIsScanning(true);
+
       } else if (type === BarCodeScanner.Constants.BarCodeType.qr && !scannedQRCode && !qrCodePrinted) {
         console.log(`Tipo de código: ${type}, Datos: ${data}`);
-
+  
         setScannedQRCode(data);
         // Almacena solo el segundo campo del código QR
         const qrCodeFields = data.split('|');
@@ -169,9 +200,17 @@ const ScanLabelScreen = ({ route, navigation }) => {
           console.log('Codigo QR 2do Valor:', secondField);
           return secondField;
         });
+  
+        // Extraer el LoT_Number o duodecimo campo del código QR
+        const lotNumberFromQRCode = qrCodeFields[10].trim();
+        setLotNumberFromQR((prevModifiedLotCode) => {
+          console.log('LoT_Number del código QR:', lotNumberFromQRCode);
+          return lotNumberFromQRCode;
+        });
+  
         // Obtener el Part_Number correspondiente al BoL desde la base de datos
         const partNumberFromDatabase = await obtenerPartNumber(selectedBoL, data);
-
+  
         if (partNumberFromDatabase !== null) {
           // Verificar si el Part_Number coincide con el código QR escaneado
           if (partNumberFromDatabase !== secondField) {
@@ -188,9 +227,18 @@ const ScanLabelScreen = ({ route, navigation }) => {
         }
         setQrCodePrinted(true);
         setIsScanning(false);
+  
+        // Verificar si el LoT_Number coincide con el del código de barras
+        if (lotNumberFromQR !== null && lotNumberFromQR !== lotNumberFromBarcode) {
+          console.log('Error de validación. El LoT_Number del código QR no coincide con el del código de barras.');
+          showErrorNotification();
+          restartScan();
+          return;
+        }
       }
     }
   };
+  
 
   const obtenerPartNumber = async (bolNumber) => {
     try {
@@ -271,6 +319,20 @@ const ScanLabelScreen = ({ route, navigation }) => {
     setQrCodePrinted(false);
     setScannedModifiedCode(null);
     setScannedModifiedQRCode(null);
+    setLotNumberFromBarcode(null);
+    setLotNumberFromQR(null);
+    setLotNumberPrinted(false);
+    setIsScanning(true);
+  };
+
+  const restartLotScan = () => {
+    setLotNumberFromBarcode(null);
+    setScannedQRCode(null);
+    setQrCodePrinted(false);
+    setScannedModifiedQRCode(null);
+    setLotNumberFromBarcode(null);
+    setLotNumberFromQR(null);
+    setLotNumberPrinted(false);
     setIsScanning(true);
   };
 
@@ -406,7 +468,9 @@ const ScanLabelScreen = ({ route, navigation }) => {
       {(scannedBarCode || scannedQRCode) && (
         <View style={styles.scanResult}>
           <Text style={styles.scanResultText}>Código de barras: {scannedModifiedCode}</Text>
+          <Text style={styles.scanResultText}>LN BR: {lotNumberFromBarcode}</Text>
           <Text style={styles.scanResultText}>Código QR: {scannedModifiedQRCode}</Text>
+          <Text style={styles.scanResultText}>LN QR: {lotNumberFromQR}</Text>
           {/* Mostrar el número de BoL#1 */}
           <Text style={styles.scanResultText}>BoL#1: {bolNumber}</Text>
         </View>
