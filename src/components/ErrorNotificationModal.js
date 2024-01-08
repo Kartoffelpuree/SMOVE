@@ -34,7 +34,7 @@ const ErrorNotificationModal = ({ visible, onClose, bolNumber }) => {
       <View style={styles.modalContainer}>
         <View style={styles.errorNotificationContainer}>
           <Icon name="alert-circle" size={32} color="#ff0000" style={styles.icon} />
-          <Text style={styles.errorNotificationText}>Error: El Número de parte no coincide con el BoL {bolNumber}</Text>
+          <Text style={styles.errorNotificationText}>Error: Verifica el Lot No. o el Part Number del BoL: {bolNumber}</Text>
         </View>
       </View>
     </Modal>
