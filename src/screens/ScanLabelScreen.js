@@ -207,6 +207,7 @@ const ScanLabelScreen = ({ route, navigation }) => {
 
         // Almacena el código de barras completo
         setScannedBarCode(data);
+        console.log('Consola ',data)
 
         // Extraer el LoT_Number del código de barras
         const lotNumberFromBarcode = data.substring(1, 7);
